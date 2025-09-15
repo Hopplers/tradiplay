@@ -1,53 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '../../components/ui/Button'
 import GameCard from '../../components/ui/GameCard'
 import SearchBar from '../../components/ui/SearchBar'
-
-const featuredGames = [
-  {
-    id: 1,
-    title: "Congkak",
-    description: "A traditional mancala game",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDcFvtLVeK-kD20vjpXJCP6sy3DOLTMCNP0oo8vmKuHlJ8EiFGtZ_NkKNdiWDXW2whEr-utO14AdjMbdBub9SnjZS8sEO3vGEN4DniJ7xXCSMNyxV40Mg4i9M04Y5intRr3NtUHGjpLogCGNFcVdTsbxPQLXdK_IPncsnT_UTbjBb2LMtRbE4XdZ7DyJB0ojeTZKFvcQKIV0eyXjxfvRFVa4KZueeXNoJD5ZbAi8kahGDOjmIUGbPqBMDthYs7ZfPRWOBcRr4-dfT8Q"
-  },
-  {
-    id: 2,
-    title: "Gasing",
-    description: "A traditional spinning top game",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuD3Ub1r8OkzdvB6LV8qcoq-MQcH7pnuDF5EU9XbtCR9wKUCvye-hri03LCRwLNJbeSYHvYGKH2xn-X1NTYnqNc3iaSYABEyHZo75RS_GGBzm3JJpL5liD6Huy_vwsL8axM-_fk5QU6NXKZVwt3ba5VM7NX_k6oYsi2nEoOkZKQyF8XDsTpP7OWkBgnkSiKU5CA8_mJNRJaqjSrHYc6e0GpvD4irgNDS-wmYcP-G-xhmR3faxWKgcbbwYPrbvKkWCngq0UlrUnAIsn0F"
-  },
-  {
-    id: 3,
-    title: "Wau",
-    description: "A traditional kite game",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPslYJigkkmE5D-ZJl-jdJNZem8_Upv5Z0jdDhO8cxRmd-P5pHbLDqjBmPZ0kVFjQBth9tNtiimHwwqkETC_Ec9a1uFlN4cALzeyjKk-0AbGr-VzJbqrv68ZQS4pJfeIIQsCCP1MNu6PQEEoIX28JZz4oMOm9DprpIgalYB8C0Ja3bAMRLQQ2dLlVSHIdLyfojw8mGAUsH3FyWCxqbRxUxXGdBCQuNwSgQvKk7d-_SCBkjBeC_lbS1c1gmWA0MeickITPO83MgQNLQ"
-  }
-]
-
-const otherGames = [
-  {
-    id: 4,
-    title: "Batu Seremban",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBIIeXizaNjMadeKrrvgOag1smLpTiCUhXP0moXSMA34-t-JleFBtd39nfkE-cu4m-iu1ZIHoXNu6Ae_CRUU9tUu5Eibxeyi3X95yCIcP_aKlenWJT0v4ho5PZ-e71x4IHcM5TMpZCFwp9ysjEWCgPxjUH0Lua-85W-xySEwh_Ap8znQtQNZrfwhTy0UjmSJddCCIubOQ0vpvBX9wOW8LKwcXl8SSTL1zZl9NAX3Np1NG_6Iuiz5HwpYVQ0piRfc_-W8oSGeqWrZ-XO"
-  },
-  {
-    id: 5,
-    title: "Sepak Takraw",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuB5TQJssGELYEAnwGR223u-u0NzQ0DlQvZtE9_EtrHHsVXtc6dhLIAzdPE0Mopv3_SyLeChky6_GXoKqcTEBLno4e1zGf9iTfBZbGJ8-jgphASZWUb0glXhhNznGxj1BoCIp3n3r3GGusyyatuHLkRyPxlLSTr0-Vi3PIMc388piKkuSgLobcwnlEpA-HhhoQKrueJBnqaGaZ7MqIvRlnkqkxNdAsa_PXrs8bgqP17iWTOPaQH3TgEbZLCPBj4XUCEZohhpPNaDi8nA"
-  },
-  {
-    id: 6,
-    title: "Dam Haji",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAlVFyWcXcKglY6C40FSQH7vSidkHKB7oNXWEEMVTSacCNbIfcPeUEps4aO9WyUNIZbyZqlXL_7uVNK8t7dgXhdvkfz0_BWS2jZCk3HVxKWZNWdNQEQYiGoGa5HbHngewBM1q5WEHfVGUXq7xP657NyTdRFrZkyvVg9X2z2-l6m9h4UbqW-eEYyEv0t_L7-O0Op3ZbWHfonZXzzG-0el3584jy2fbDrw5Wcstqri1Q2TME5IuQpXOjoteYjFEvFr2HaK4TwEpWQ61fW"
-  },
-  {
-    id: 7,
-    title: "Kabbadi",
-    imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDNWkEWzDDTtpfEIbZCu_GPmBoBPm0oWkUqe9cZoJd1p2R8bJJ7Zc3A1qFUa2396kCZ12xprre-tVD9v47mvqtOIRJs3DH2M0CJz9PQYJT08WEqgVZoK3cf4qjx9BSwU5bI5o-srhBq5JgRvtcfkyPDUpchTfC4LE_qAkE8AYAhiRRz3FrhpNC-bsZh1LxlNpc_euw2Yc3cH99uJpwPM7XdsSMlXNXmdAxCvXaEa5Q8pAreCJkoP8juSqKDuZszXq-SOKuUS0YCue6H"
-  }
-]
+import { getGames } from '../../lib/database'
 
 const categories = [
   "Board Games",
@@ -59,6 +16,22 @@ const categories = [
 export default function ExplorePage() {
   const router = useRouter()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [games, setGames] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchGames() {
+      try {
+        const gamesData = await getGames()
+        setGames(gamesData || [])
+      } catch (error) {
+        console.error('Error fetching games:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchGames()
+  }, [])
 
   const handleGameClick = (gameId: number) => {
     router.push(`/games/${gameId}`)
@@ -70,6 +43,17 @@ export default function ExplorePage() {
 
   const handleLearnMore = () => {
     console.log('Learn more clicked')
+  }
+
+  const featuredGames = games.slice(0, 3)
+  const otherGames = games.slice(3)
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Loading games...</div>
+      </div>
+    )
   }
 
   return (
@@ -98,9 +82,9 @@ export default function ExplorePage() {
           {featuredGames.map((game) => (
             <GameCard
               key={game.id}
-              title={game.title}
+              title={game.name}
               description={game.description}
-              imageUrl={game.imageUrl}
+              imageUrl={game.image_url}
               onClick={() => handleGameClick(game.id)}
             />
           ))}
@@ -134,11 +118,11 @@ export default function ExplorePage() {
         {otherGames.map((game) => (
           <div key={game.id} className="flex flex-col gap-3">
             <div 
-              className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl cursor-pointer hover:scale-105 transition-transform duration-200"
-              style={{ backgroundImage: `url("${game.imageUrl}")` }}
+              className="w-full h-40 bg-center bg-no-repeat bg-cover rounded-xl cursor-pointer hover:scale-105 transition-transform duration-200"
+              style={{ backgroundImage: `url("${game.image_url}")` }}
               onClick={() => handleGameClick(game.id)}
             />
-            <p className="text-[var(--text-primary)] text-base font-medium">{game.title}</p>
+            <p className="text-[var(--text-primary)] text-base font-medium">{game.name}</p>
           </div>
         ))}
       </div>

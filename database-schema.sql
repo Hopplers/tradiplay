@@ -25,8 +25,8 @@ CREATE TABLE public.games (
 
 -- Create leaderboard table
 CREATE TABLE public.leaderboard (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES public.users(id) ON DELETE CASCADE,
   game_id INTEGER REFERENCES public.games(id) ON DELETE CASCADE,
   wins INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -43,11 +43,11 @@ CREATE TABLE public.feedback (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Enable Row Level Security (RLS)
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.games ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.leaderboard ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+-- Disable Row Level Security (RLS) for easier development
+-- ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.games ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.leaderboard ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for users table
 CREATE POLICY "Users can view their own profile" ON public.users
@@ -58,17 +58,15 @@ CREATE POLICY "Users can update their own profile" ON public.users
 
 CREATE POLICY "Superadmins can view all users" ON public.users
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'superadmin'
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role = 'superadmin'
     )
   );
 
 CREATE POLICY "Superadmins can update user roles" ON public.users
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'superadmin'
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role = 'superadmin'
     )
   );
 
@@ -78,25 +76,22 @@ CREATE POLICY "Anyone can view enabled games" ON public.games
 
 CREATE POLICY "Admins can view all games" ON public.games
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role IN ('admin', 'superadmin')
     )
   );
 
 CREATE POLICY "Admins can insert games" ON public.games
   FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role IN ('admin', 'superadmin')
     )
   );
 
 CREATE POLICY "Admins can update games" ON public.games
   FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role IN ('admin', 'superadmin')
     )
   );
 
@@ -113,9 +108,8 @@ CREATE POLICY "Users can insert their own feedback" ON public.feedback
 
 CREATE POLICY "Admins can view all feedback" ON public.feedback
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+    auth.uid() IN (
+      SELECT id FROM public.users WHERE role IN ('admin', 'superadmin')
     )
   );
 

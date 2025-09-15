@@ -1,46 +1,70 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { getAllGames, updateGame, getAllUsers } from '../../lib/database'
 
 export default function AdminPanel() {
   const router = useRouter()
-  const [games, setGames] = useState([
-    {
-      id: 1,
-      name: 'Congkak',
-      description: 'A traditional Malay board game of "count and capture".',
-      visible: true,
-      playable: true
-    },
-    {
-      id: 2,
-      name: 'Gasing',
-      description: 'The art of spinning giant tops, a test of skill and strength.',
-      visible: false,
-      playable: false
+  const [games, setGames] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [gamesData, usersData] = await Promise.all([
+          getAllGames(),
+          getAllUsers()
+        ])
+        setGames(gamesData || [])
+        setUsers(usersData || [])
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  ])
+    fetchData()
+  }, [])
 
-  const [users] = useState([
-    { id: 1, username: 'user_alpha', email: 'alpha@email.com' },
-    { id: 2, username: 'user_beta', email: 'beta@email.com' },
-    { id: 3, username: 'user_gamma', email: 'gamma@email.com' }
-  ])
-
-  const toggleGameVisibility = (gameId: number) => {
-    setGames(games.map(game => 
-      game.id === gameId ? { ...game, visible: !game.visible } : game
-    ))
+  const toggleGameVisibility = async (gameId: number) => {
+    try {
+      const game = games.find(g => g.id === gameId)
+      if (game) {
+        await updateGame(gameId, { is_enabled: !game.is_enabled })
+        setGames(games.map(g => 
+          g.id === gameId ? { ...g, is_enabled: !g.is_enabled } : g
+        ))
+      }
+    } catch (error) {
+      console.error('Error updating game visibility:', error)
+    }
   }
 
-  const toggleGamePlayable = (gameId: number) => {
-    setGames(games.map(game => 
-      game.id === gameId ? { ...game, playable: !game.playable } : game
-    ))
+  const toggleGamePlayable = async (gameId: number) => {
+    try {
+      const game = games.find(g => g.id === gameId)
+      if (game) {
+        await updateGame(gameId, { is_playable: !game.is_playable })
+        setGames(games.map(g => 
+          g.id === gameId ? { ...g, is_playable: !g.is_playable } : g
+        ))
+      }
+    } catch (error) {
+      console.error('Error updating game playability:', error)
+    }
   }
 
   const handleLogout = () => {
     router.push('/auth/signup')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Loading admin panel...</div>
+      </div>
+    )
   }
 
   return (
@@ -86,12 +110,12 @@ export default function AdminPanel() {
                       <span className="text-sm text-[var(--text-primary)]">Status</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-[var(--text-secondary)]">
-                          {game.visible ? 'Visible' : 'Hidden'}
+                          {game.is_enabled ? 'Visible' : 'Hidden'}
                         </span>
                         <label className="switch">
                           <input 
                             type="checkbox" 
-                            checked={game.visible}
+                            checked={game.is_enabled}
                             onChange={() => toggleGameVisibility(game.id)}
                           />
                           <span className="slider"></span>
@@ -102,12 +126,12 @@ export default function AdminPanel() {
                       <span className="text-sm text-[var(--text-primary)]">Playable</span>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-[var(--text-secondary)]">
-                          {game.playable ? 'Enabled' : 'Disabled'}
+                          {game.is_playable ? 'Enabled' : 'Disabled'}
                         </span>
                         <label className="switch">
                           <input 
                             type="checkbox" 
-                            checked={game.playable}
+                            checked={game.is_playable}
                             onChange={() => toggleGamePlayable(game.id)}
                           />
                           <span className="slider"></span>
@@ -129,7 +153,7 @@ export default function AdminPanel() {
               {users.map((user) => (
                 <div key={user.id} className="flex justify-between items-center">
                   <div>
-                    <p className="text-[var(--text-primary)] font-semibold">{user.username}</p>
+                    <p className="text-[var(--text-primary)] font-semibold">{user.username || user.email}</p>
                     <p className="text-xs text-[var(--text-secondary)]">{user.email}</p>
                   </div>
                   <button className="text-red-500 hover:text-red-400">

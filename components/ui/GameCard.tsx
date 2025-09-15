@@ -8,11 +8,11 @@ interface GameCardProps {
   export default function GameCard({ title, description, imageUrl, onClick }: GameCardProps) {
     return (
       <div 
-        className="flex flex-col gap-3 min-w-[15rem] flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-200"
+        className="flex flex-col gap-3 w-60 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-200"
         onClick={onClick}
       >
         <div 
-          className="w-full bg-center bg-no-repeat aspect-square bg-cover rounded-xl"
+          className="w-full h-48 bg-center bg-no-repeat bg-cover rounded-xl"
           style={{ backgroundImage: `url("${imageUrl}")` }}
         />
         <div>
