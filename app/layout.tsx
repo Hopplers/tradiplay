@@ -17,7 +17,6 @@ export default function RootLayout({
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#38e07b" />
       </head>
       <body className="bg-[var(--background-color)]">

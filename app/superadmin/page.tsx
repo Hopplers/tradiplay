@@ -1,93 +1,222 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../../contexts/AuthContext'
+import { getAllUsers, updateUserRole } from '../../lib/database'
 
-export default function SuperadminPanel() {
+export default function SuperAdminPanel() {
+  const { user, userProfile } = useAuth()
   const router = useRouter()
-  const [admins] = useState([
-    {
-      id: 1,
-      name: 'Ahmad',
-      role: 'Admin',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAoqQJ_O9Oty83KZyV0aJXC8Q8a3_k07sE0jCqZjPkO4oJMEXXbyGSEbYcltSWHmDR-5y00qDxVEWbZNnfwTuIRcnDA2i_gaMQBZhBk76PaCazcD9vz4tuuM5nT5CMrrECNGqJ2UoM3uStJ7Q_jO6lbwAB6y4Xr0clC0EV45ZWvHLZQWyF6Z76-4whz9McVIh902uBqWsc6P_iXwW9etBNDPUpBJHHgEMhBhag_U21FMJZaEHSDjiRve0qoAimgWB_Dx9Q5P9MN8n9'
-    },
-    {
-      id: 2,
-      name: 'Siti',
-      role: 'Admin',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAaZ6P0wwe668mDS8oLTN-38T9mGvRLIPsezBuoZS1xhGcariJtkK6bHi0XB_Kt3x12ldOT37xf-_X8WBiUy-Lb2BnXsNEIwCQZ4y1vV7-_fDECTLtn0GsfphQwlU2jFNz5XpRhV8RJirvfDmQmPoGTCIYA8t2KZXA3TW6JEyh2XprRGJAhsIvj2i0rz4_-jqFbfe14s5_qPqQhKektRtz_ThkWVggLGuX-fucHMt1EA8d9naT0U2zIQlWxuoV56HqLw0BfBxfVvvB8'
-    },
-    {
-      id: 3,
-      name: 'Ravi',
-      role: 'Admin',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCTWke_CXR9cRypDDbID_iUTDm49Lcnw8IHZ4P--jxDQyAPRX9cX6qwKS8nstBlwCrKss2V3BDxGSdpH832YBx-2RC9szO8pQGqkWkgeu65wga2aA7hdyryjiPEjA6eS8VuZLxruMr154CG6z8qentvpbiRPyHp8Zj1twUymyzXVml-K4hgf28mQkx_dMG5oAs06-w7o2ySOdZHcNVkvs_6khmjE0zSKptl8x42Jb4oFXQhDGGVr8PoKMuniGuCj8KgBSFcDaOD0fIV'
-    },
-    {
-      id: 4,
-      name: 'Mei Ling',
-      role: 'Admin',
-      avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCqu3jFha7yorCa8ylzcTrhrO_HU3pC53Ww1Dt4LSxvps3wCnnraCszLEiZkVyLcV3cHLdRVDvAP5Hs1uJ-i0mfHKVncpyVB4KxOTN6rLleIt9taHnHhT5WwvSg2Ylwe5eZtxhTDWV_haJlFSwV9DaSdZi356uwuW4T6lFd67LFkus3PbqvTyZYLmh-L41bBGtENf5LGHkN77G4i9fnTYQwjUe6sal-QrHN0RU1J5_0HrwZ8Chzh9amnYaj_BUbSt0EWUyUPtI3e42T'
-    }
-  ])
+  const [users, setUsers] = useState<any[]>([])
+  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
 
-  const handleBack = () => {
-    router.back()
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+
+    if (!userProfile || userProfile.role !== 'superadmin') {
+      router.push('/explore')
+      return
+    }
+  }, [user, userProfile, router])
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const usersData = await getAllUsers()
+        setAllUsers(usersData || [])
+        // Filter to show only admins and superadmins
+        const adminUsers = usersData?.filter(user => 
+          user.role === 'admin' || user.role === 'superadmin'
+        ) || []
+        setUsers(adminUsers)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  const promoteToAdmin = async (userId: string) => {
+    try {
+      await updateUserRole(userId, 'admin')
+      // Refresh data
+      const usersData = await getAllUsers()
+      setAllUsers(usersData || [])
+      const adminUsers = usersData?.filter(user => 
+        user.role === 'admin' || user.role === 'superadmin'
+      ) || []
+      setUsers(adminUsers)
+      setShowModal(false)
+    } catch (error) {
+      console.error('Error promoting user:', error)
+    }
   }
 
+  const demoteToUser = async (userId: string) => {
+    try {
+      await updateUserRole(userId, 'user')
+      // Refresh data
+      const usersData = await getAllUsers()
+      setAllUsers(usersData || [])
+      const adminUsers = usersData?.filter(user => 
+        user.role === 'admin' || user.role === 'superadmin'
+      ) || []
+      setUsers(adminUsers)
+    } catch (error) {
+      console.error('Error demoting user:', error)
+    }
+  }
+
+  const regularUsers = allUsers.filter(u => u.role === 'user')
+
   const handleLogout = () => {
-    router.push('/auth/signup')
+    router.push('/auth/login')
+  }
+
+  if (!user || !userProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Loading...</div>
+      </div>
+    )
+  }
+
+  if (userProfile.role !== 'superadmin') {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Access denied</div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Loading superadmin panel...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="relative flex size-full min-h-screen flex-col justify-between">
-      <div>
-        <header className="flex items-center p-4">
-          <button className="text-[var(--text-primary)] p-2" onClick={handleBack}>
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-          <h1 className="text-xl font-bold text-center flex-grow">Superadmin Panel</h1>
-          <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-2" onClick={handleLogout}>
-            <span className="material-symbols-outlined">logout</span>
-          </button>
-        </header>
-        
-        <main className="px-4">
-          <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-6">Manage Admins</h2>
-          <div className="space-y-4">
-            {admins.map((admin) => (
-              <div key={admin.id} className="flex items-center justify-between p-4 bg-[var(--surface-color)] rounded-xl border border-[#444444]">
-                <div className="flex items-center gap-4">
-                  <img 
-                    alt={`${admin.name}'s profile picture`} 
-                    className="h-14 w-14 rounded-full object-cover" 
-                    src={admin.avatar}
-                  />
-                  <div>
-                    <p className="text-lg font-semibold text-[var(--text-primary)]">{admin.name}</p>
-                    <p className="text-sm text-[var(--text-secondary)]">{admin.role}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button className="text-[var(--text-secondary)] hover:text-[var(--primary-color)] transition-colors p-2">
-                    <span className="material-symbols-outlined">edit</span>
-                  </button>
-                  <button className="text-[var(--text-secondary)] hover:text-red-500 transition-colors p-2">
-                    <span className="material-symbols-outlined">delete</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </main>
-      </div>
-      
-      <footer className="sticky bottom-0 p-4 bg-[var(--background-color)]">
-        <button className="w-full flex items-center justify-center gap-2 rounded-xl h-14 bg-[var(--primary-color)] text-black font-bold text-lg leading-normal tracking-wide shadow-lg hover:bg-opacity-90 transition-all duration-300">
-          <span className="material-symbols-outlined">add_circle</span>
-          <span>Add New Admin</span>
+    <div className="min-h-screen bg-[var(--background-color)] p-6">
+      <header className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)]">TradiPlay</h1>
+          <p className="text-lg text-[var(--text-secondary)]">Super Admin Panel</p>
+        </div>
+        <button 
+          className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          onClick={handleLogout}
+        >
+          <span className="material-symbols-outlined">logout</span>
         </button>
-      </footer>
+      </header>
+
+      <main className="space-y-8 max-w-6xl">
+        {/* Statistics */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4">Statistics</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-[var(--surface-color)] rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Total Admins</h3>
+              <p className="text-2xl font-bold text-[var(--primary-color)]">
+                {users.filter(u => u.role === 'admin').length}
+              </p>
+            </div>
+            <div className="bg-[var(--surface-color)] rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)]">Total Superadmins</h3>
+              <p className="text-2xl font-bold text-[var(--primary-color)]">
+                {users.filter(u => u.role === 'superadmin').length}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Admin Management */}
+        <section>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mb-4">Admin Management</h2>
+          <div className="bg-[var(--surface-color)] rounded-lg p-4">
+            <div className="space-y-4">
+              {users.map((user) => (
+                <div key={user.id} className="flex justify-between items-center p-3 border border-gray-600 rounded-lg">
+                  <div>
+                    <h3 className="font-semibold text-[var(--text-primary)]">
+                      {user.username || user.email}
+                    </h3>
+                    <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
+                    <span className={`text-xs px-2 py-1 rounded mt-1 inline-block ${
+                      user.role === 'superadmin' ? 'bg-red-600' : 'bg-yellow-600'
+                    }`}>
+                      {user.role}
+                    </span>
+                  </div>
+                  <button 
+                    className="bg-red-600 hover:bg-red-500 text-white p-2 rounded-lg transition-colors"
+                    onClick={() => demoteToUser(user.id)}
+                    title="Demote to User"
+                  >
+                    <span className="material-symbols-outlined">arrow_downward</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button 
+              className="mt-4 w-full bg-[var(--primary-color)] text-black py-3 px-6 rounded-lg font-bold hover:bg-[var(--accent-color)] transition-colors"
+              onClick={() => setShowModal(true)}
+            >
+              Add Admin User
+            </button>
+          </div>
+        </section>
+      </main>
+
+      {/* Add Admin Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-color)] rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[var(--text-primary)]">Select User to Promote</h3>
+              <button 
+                onClick={() => setShowModal(false)} 
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {regularUsers.length === 0 ? (
+                <p className="text-[var(--text-secondary)] text-center py-4">No regular users found</p>
+              ) : (
+                regularUsers.map((user) => (
+                  <div key={user.id} className="flex justify-between items-center p-3 border border-gray-600 rounded-lg">
+                    <div>
+                      <h4 className="font-semibold text-[var(--text-primary)]">
+                        {user.username || user.email}
+                      </h4>
+                      <p className="text-sm text-[var(--text-secondary)]">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => promoteToAdmin(user.id)}
+                      className="bg-[var(--primary-color)] hover:bg-[var(--accent-color)] text-black p-2 rounded-lg transition-colors"
+                      title="Promote to Admin"
+                    >
+                      <span className="material-symbols-outlined">arrow_upward</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

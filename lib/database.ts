@@ -50,6 +50,17 @@ export async function updateGame(id: number, updates: Partial<Game>) {
   return data
 }
 
+export async function createGame(gameData: Partial<Game>) {
+  const { data, error } = await supabase
+    .from('games')
+    .insert(gameData)
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
 // User functions
 export async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser()
@@ -207,3 +218,5 @@ export async function updateLeaderboard(userId: string, gameId: number) {
     return data
   }
 }
+
+

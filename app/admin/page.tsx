@@ -1,13 +1,25 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getAllGames, updateGame, getAllUsers } from '../../lib/database'
+import { getAllGames, updateGame, getAllUsers, createGame } from '../../lib/database'
 
 export default function AdminPanel() {
   const router = useRouter()
   const [games, setGames] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editingGame, setEditingGame] = useState<any>(null)
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    rules: '',
+    history: '',
+    cultural_context: '',
+    is_enabled: true,
+    is_playable: false,
+    image_url: ''
+  })
 
   useEffect(() => {
     async function fetchData() {
@@ -26,6 +38,64 @@ export default function AdminPanel() {
     }
     fetchData()
   }, [])
+
+  const openModal = (game?: any) => {
+    if (game) {
+      setEditingGame(game)
+      setFormData({
+        name: game.name || '',
+        description: game.description || '',
+        rules: game.rules || '',
+        history: game.history || '',
+        cultural_context: game.cultural_context || '',
+        is_enabled: game.is_enabled || false,
+        is_playable: game.is_playable || false,
+        image_url: game.image_url || ''
+      })
+    } else {
+      setEditingGame(null)
+      setFormData({
+        name: '',
+        description: '',
+        rules: '',
+        history: '',
+        cultural_context: '',
+        is_enabled: true,
+        is_playable: false,
+        image_url: ''
+      })
+    }
+    setShowModal(true)
+  }
+
+  const closeModal = () => {
+    setShowModal(false)
+    setEditingGame(null)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      if (editingGame) {
+        await updateGame(editingGame.id, formData)
+        setGames(games.map(g => g.id === editingGame.id ? { ...g, ...formData } : g))
+      } else {
+        const newGame = await createGame(formData)
+        setGames([...games, newGame])
+      }
+      closeModal()
+    } catch (error) {
+      console.error('Error saving game:', error)
+    }
+  }
 
   const toggleGameVisibility = async (gameId: number) => {
     try {
@@ -100,7 +170,10 @@ export default function AdminPanel() {
                 <div key={game.id} className="bg-[var(--surface-color)] rounded-lg p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-[var(--text-primary)]">{game.name}</h3>
-                    <button className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                    <button 
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      onClick={() => openModal(game)}
+                    >
                       <span className="material-symbols-outlined">edit</span>
                     </button>
                   </div>
@@ -142,7 +215,10 @@ export default function AdminPanel() {
                 </div>
               ))}
             </div>
-            <button className="mt-6 w-full bg-[var(--primary-color)] text-[var(--background-color)] py-3 px-6 rounded-full font-bold hover:bg-[var(--accent-color)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-opacity-50 transition-colors duration-200 ease-in-out shadow-lg flex items-center justify-center">
+            <button 
+              className="mt-6 w-full bg-[var(--primary-color)] text-[var(--background-color)] py-3 px-6 rounded-full font-bold hover:bg-[var(--accent-color)] focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-opacity-50 transition-colors duration-200 ease-in-out shadow-lg flex items-center justify-center"
+              onClick={() => openModal()}
+            >
               <span className="material-symbols-outlined mr-2">add</span> Add New Game
             </button>
           </section>
@@ -165,6 +241,135 @@ export default function AdminPanel() {
           </section>
         </main>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--surface-color)] rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                {editingGame ? 'Edit Game' : 'Add New Game'}
+              </h3>
+              <button onClick={closeModal} className="text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Game Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Rules</label>
+                <textarea
+                  name="rules"
+                  value={formData.rules}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">History</label>
+                <textarea
+                  name="history"
+                  value={formData.history}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Cultural Context</label>
+                <textarea
+                  name="cultural_context"
+                  value={formData.cultural_context}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-primary)] mb-1">Image URL</label>
+                <input
+                  type="url"
+                  name="image_url"
+                  value={formData.image_url}
+                  onChange={handleInputChange}
+                  className="w-full p-3 bg-[var(--background-color)] border border-gray-600 rounded-lg text-[var(--text-primary)]"
+                />
+              </div>
+
+              <div className="flex space-x-6">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_enabled"
+                    checked={formData.is_enabled}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                  />
+                  <label className="text-sm text-[var(--text-primary)]">Enable (Visible to users)</label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_playable"
+                    checked={formData.is_playable}
+                    onChange={handleInputChange}
+                    className="mr-2"
+                  />
+                  <label className="text-sm text-[var(--text-primary)]">Playable</label>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-[var(--primary-color)] text-black py-3 px-6 rounded-lg font-bold hover:bg-[var(--accent-color)] transition-colors"
+                >
+                  {editingGame ? 'Update Game' : 'Create Game'}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="flex-1 bg-gray-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-gray-500 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
