@@ -12,6 +12,7 @@ export type Database = {
         Row: {
           id: string
           email: string
+          username: string | null
           role: 'user' | 'admin' | 'superadmin'
           created_at: string
           updated_at: string
@@ -19,6 +20,7 @@ export type Database = {
         Insert: {
           id?: string
           email: string
+          username?: string | null
           role?: 'user' | 'admin' | 'superadmin'
           created_at?: string
           updated_at?: string
@@ -26,6 +28,7 @@ export type Database = {
         Update: {
           id?: string
           email?: string
+          username?: string | null
           role?: 'user' | 'admin' | 'superadmin'
           created_at?: string
           updated_at?: string
@@ -33,35 +36,41 @@ export type Database = {
       }
       games: {
         Row: {
-          id: string
+          id: number
           name: string
           description: string
           rules: string
           history: string
           cultural_context: string
+          image_url: string
           is_enabled: boolean
+          is_playable: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
-          id?: string
+          id?: number
           name: string
           description: string
           rules: string
           history: string
           cultural_context: string
+          image_url: string
           is_enabled?: boolean
+          is_playable?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
-          id?: string
+          id?: number
           name?: string
           description?: string
           rules?: string
           history?: string
           cultural_context?: string
+          image_url?: string
           is_enabled?: boolean
+          is_playable?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -70,7 +79,7 @@ export type Database = {
         Row: {
           id: string
           user_id: string
-          game_id: string
+          game_id: number
           wins: number
           created_at: string
           updated_at: string
@@ -78,7 +87,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          game_id: string
+          game_id: number
           wins?: number
           created_at?: string
           updated_at?: string
@@ -86,7 +95,7 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          game_id?: string
+          game_id?: number
           wins?: number
           created_at?: string
           updated_at?: string

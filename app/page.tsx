@@ -10,8 +10,7 @@ export default function WelcomePage() {
   }
 
   const handleSignUp = () => {
-    // Add your sign up logic here
-    console.log('Sign up clicked')
+    router.push('/auth/signup')
   }
 
   return (

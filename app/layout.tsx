@@ -1,4 +1,6 @@
 import './globals.css'
+import FloatingChatButton from '../components/ui/FloatingChatButton'
+import { AuthProvider } from '../contexts/AuthContext'
 
 export const metadata = {
   title: 'TradiPlay',
@@ -19,7 +21,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#38e07b" />
       </head>
       <body className="bg-[var(--background-color)]">
-        {children}
+        <AuthProvider>
+          {children}
+          <FloatingChatButton />
+        </AuthProvider>
       </body>
     </html>
   )

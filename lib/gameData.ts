@@ -1,5 +1,5 @@
 export interface Game {
-  id: string
+  id: number
   title: string
   description?: string
   imageUrl: string
@@ -10,9 +10,9 @@ export interface Game {
   category: string[]
 }
 
-export const gamesData: Record<string, Game> = {
-  congkak: {
-    id: '1',
+export const gamesData: Record<number, Game> = {
+  1: {
+    id: 1,
     title: 'Congkak',
     description: 'A traditional mancala game',
     imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuDcFvtLVeK-kD20vjpXJCP6sy3DOLTMCNP0oo8vmKuHlJ8EiFGtZ_NkKNdiWDXW2whEr-utO14AdjMbdBub9SnjZS8sEO3vGEN4DniJ7xXCSMNyxV40Mg4i9M04Y5intRr3NtUHGjpLogCGNFcVdTsbxPQLXdK_IPncsnT_UTbjBb2LMtRbE4XdZ7DyJB0ojeTZKFvcQKIV0eyXjxfvRFVa4KZueeXNoJD5ZbAi8kahGDOjmIUGbPqBMDthYs7ZfPRWOBcRr4-dfT8Q",
@@ -22,8 +22,8 @@ export const gamesData: Record<string, Game> = {
     culturalSignificance: "Congkak is deeply rooted in Malay culture, often played during leisure time, festivals, and social gatherings. It teaches strategic thinking, counting skills, and patience, while also fostering social interaction and community bonding. The game's presence in homes and public spaces highlights its importance in Malay heritage.",
     category: ['Board Games', 'Strategy']
   },
-  gasing: {
-    id: '2',
+  2: {
+    id: 2,
     title: 'Gasing',
     description: 'A traditional spinning top game',
     imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuD3Ub1r8OkzdvB6LV8qcoq-MQcH7pnuDF5EU9XbtCR9wKUCvye-hri03LCRwLNJbeSYHvYGKH2xn-X1NTYnqNc3iaSYABEyHZo75RS_GGBzm3JJpL5liD6Huy_vwsL8axM-_fk5QU6NXKZVwt3ba5VM7NX_k6oYsi2nEoOkZKQyF8XDsTpP7OWkBgnkSiKU5CA8_mJNRJaqjSrHYc6e0GpvD4irgNDS-wmYcP-G-xhmR3faxWKgcbbwYPrbvKkWCngq0UlrUnAIsn0F",
@@ -32,8 +32,8 @@ export const gamesData: Record<string, Game> = {
     culturalSignificance: "Gasing represents the balance and harmony valued in Malay culture.",
     category: ['Outdoor Games', 'Skill']
   },
-  wau: {
-    id: '3',
+  3: {
+    id: 3,
     title: 'Wau',
     description: 'A traditional kite game',
     imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAPslYJigkkmE5D-ZJl-jdJNZem8_Upv5Z0jdDhO8cxRmd-P5pHbLDqjBmPZ0kVFjQBth9tNtiimHwwqkETC_Ec9a1uFlN4cALzeyjKk-0AbGr-VzJbqrv68ZQS4pJfeIIQsCCP1MNu6PQEEoIX28JZz4oMOm9DprpIgalYB8C0Ja3bAMRLQQ2dLlVSHIdLyfojw8mGAUsH3FyWCxqbRxUxXGdBCQuNwSgQvKk7d-_SCBkjBeC_lbS1c1gmWA0MeickITPO83MgQNLQ",

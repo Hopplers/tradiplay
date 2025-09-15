@@ -36,7 +36,7 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <footer className="sticky bottom-0 bg-[var(--background-color)] border-t border-gray-800">
+    <footer className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--background-color)] border-t border-gray-800">
       <nav className="flex justify-around py-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href || 

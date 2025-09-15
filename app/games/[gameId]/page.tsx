@@ -11,7 +11,8 @@ interface GamePageProps {
 }
 
 export default function GamePage({ params }: GamePageProps) {
-  const game = gamesData[params.gameId]
+  const gameId = parseInt(params.gameId)
+  const game = gamesData[gameId]
   
   if (!game) {
     notFound()
