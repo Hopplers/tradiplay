@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn } from '../../../lib/database'
+import { supabase } from '../../../lib/supabase'
 import Input from '../../../components/ui/Input'
 import Button from '../../../components/ui/Button'
 
@@ -29,7 +30,28 @@ export default function LoginPage() {
 
     try {
       await signIn(formData.email, formData.password)
-      router.push('/explore')
+      
+      // Get user profile to check role
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (profile) {
+          if (profile.role === 'superadmin') {
+            router.push('/superadmin')
+          } else if (profile.role === 'admin') {
+            router.push('/admin')
+          } else {
+            router.push('/explore')
+          }
+        } else {
+          router.push('/explore')
+        }
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to login')
     } finally {

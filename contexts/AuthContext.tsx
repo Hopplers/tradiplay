@@ -1,5 +1,6 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/database'

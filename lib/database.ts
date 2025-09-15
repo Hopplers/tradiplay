@@ -175,3 +175,35 @@ export async function signOut() {
   const { error } = await supabase.auth.signOut()
   if (error) throw error
 }
+// Leaderboard functions
+export async function updateLeaderboard(userId: string, gameId: number) {
+  // First try to get existing record
+  const { data: existing } = await supabase
+    .from('leaderboard')
+    .select('wins')
+    .eq('user_id', userId)
+    .eq('game_id', gameId)
+    .single()
+
+  if (existing) {
+    // Update existing record
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .update({ wins: existing.wins + 1 })
+      .eq('user_id', userId)
+      .eq('game_id', gameId)
+      .select()
+
+    if (error) throw error
+    return data
+  } else {
+    // Create new record
+    const { data, error } = await supabase
+      .from('leaderboard')
+      .insert({ user_id: userId, game_id: gameId, wins: 1 })
+      .select()
+
+    if (error) throw error
+    return data
+  }
+}

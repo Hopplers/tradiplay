@@ -53,8 +53,12 @@ export default function GamePage({ params }: GamePageProps) {
   }
 
   const handlePlay = () => {
-    // Navigate to game play page (to be implemented)
-    router.push(`/games/${gameId}/play`)
+    // Navigate to specific game play page
+    if (game.id === 1) {
+      router.push('/games/play/congkak')
+    } else {
+      router.push(`/games/${gameId}/play`)
+    }
   }
 
   return (

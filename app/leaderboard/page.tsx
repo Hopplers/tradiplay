@@ -16,7 +16,9 @@ export default function LeaderboardPage() {
         const gamesData = await getGames()
         setGames(gamesData || [])
         if (gamesData && gamesData.length > 0) {
-          setSelectedGameId(gamesData[0].id)
+          // Default to Congkak (game ID 1) if it exists, otherwise first game
+          const congkak = gamesData.find(game => game.id === 1)
+          setSelectedGameId(congkak ? 1 : gamesData[0].id)
         }
       } catch (error) {
         console.error('Error fetching games:', error)
@@ -102,7 +104,7 @@ export default function LeaderboardPage() {
                     </div>
                     <div className="flex-grow">
                       <div className="font-bold text-[var(--text-primary)]">
-                        {entry.users?.username || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                        {entry.user_id === user?.id ? 'You' : (entry.users?.username || entry.users?.email?.split('@')[0] || 'Anonymous')}
                       </div>
                     </div>
                     <div className="text-right">
@@ -123,8 +125,8 @@ export default function LeaderboardPage() {
               })}
             </div>
 
-            {/* Current User */}
-            {user && currentUserEntry && (
+            {/* Current User - Only show if not in top 10 */}
+            {user && currentUserEntry && !topEntries.some(entry => entry.user_id === user.id) && (
               <div className="mt-8 bg-[var(--surface-color)] border-2 border-[var(--primary-color)] rounded-xl p-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-10 text-center text-lg font-medium text-[var(--text-primary)]">
