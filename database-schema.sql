@@ -107,9 +107,6 @@ CREATE POLICY "Users can view leaderboard" ON public.leaderboard
 CREATE POLICY "Users can update their own scores" ON public.leaderboard
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own scores" ON public.leaderboard
-  FOR UPDATE USING (auth.uid() = user_id);
-
 -- Create policies for feedback table
 CREATE POLICY "Users can insert their own feedback" ON public.feedback
   FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -132,10 +129,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger for new user creation
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
