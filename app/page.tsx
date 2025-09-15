@@ -1,103 +1,57 @@
-import Image from "next/image";
+'use client'
+import { useRouter } from 'next/navigation'
+import Button from '../components/ui/Button'
 
-export default function Home() {
+export default function WelcomePage() {
+  const router = useRouter()
+
+  const handleExploreAsGuest = () => {
+    router.push('/explore')
+  }
+
+  const handleSignUp = () => {
+    // Add your sign up logic here
+    console.log('Sign up clicked')
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="relative flex flex-col min-h-screen justify-between overflow-hidden">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          alt="Malay traditional games background" 
+          className="w-full h-full object-cover opacity-30" 
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkJdVdUj5ygPY1-wDhKAl_h68sjiwdSFB8VXNUeP5fi4pnTOEL5WF8g7KNeOse_5fWjhBxvi1QVP86kMN5J5s__aNvNuK05b41x5uCtH5b3sVcfyUTZTxOX8ghMzf75extpvukUX8re2JGGSW0gOQfN4pqfFo7JGojQvPGSuA-vyy2XO0n6682sCP6-rCEnqV3o_LAYC-84-m_KNpUFPrRVWBIFyvrgtTwEXBbnhvRhemLXFzzQ_VAvLXlass6f_nY78f2AGGjLfgd"
         />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--background-color)] via-[var(--background-color)]/80 to-transparent"></div>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Content */}
+      <div className="relative z-10 flex flex-col justify-center items-center flex-grow text-center px-6 pt-20">
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-6xl font-bold text-[var(--text-primary)] mb-2">TradiPlay</h1>
+          <p className="text-lg md:text-xl text-[var(--text-secondary)]">Your Gateway to Malay Heritage</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        
+        <div className="max-w-md mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-[var(--text-primary)] mb-4">Welcome!</h2>
+          <p className="text-base md:text-lg text-[var(--text-secondary)] leading-relaxed mb-10">
+            Discover and play traditional Malay games, preserving our cultural heritage in a digital world.
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="relative z-10 p-6 w-full max-w-md mx-auto">
+        <div className="flex flex-col gap-4">
+          <Button onClick={handleExploreAsGuest}>
+            Explore as Guest
+          </Button>
+          <Button variant="secondary" onClick={handleSignUp}>
+            Sign Up
+          </Button>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
