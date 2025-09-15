@@ -1,148 +1,116 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import BackButton from '../../../components/ui/BackButton'
-import Input from '../../../components/ui/Input'
 import Link from 'next/link'
+import { signUp } from '../../../lib/database'
+import Input from '../../../components/ui/Input'
+import Button from '../../../components/ui/Button'
 
-export default function SignupPage() {
+export default function SignUpPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    username: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
   }
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+    setError('')
+
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!')
+      setError('Passwords do not match')
       return
     }
 
-    setIsLoading(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Signup attempt:', formData)
-      setIsLoading(false)
-      // Add your registration logic here
-      // For now, just redirect to explore page
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await signUp(formData.email, formData.password, formData.username)
       router.push('/explore')
-    }, 2000)
+    } catch (error: any) {
+      setError(error.message || 'Failed to create account')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="flex flex-col h-full bg-[var(--background-color)]">
-      {/* Header */}
-      <header className="flex items-center p-4">
-        <BackButton />
-        <h2 className="text-[var(--text-primary)] text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">
-          TradiPlay
-        </h2>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-grow flex flex-col justify-center px-6 max-w-md mx-auto w-full">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-[var(--text-primary)] text-3xl md:text-4xl font-bold leading-tight tracking-tight mb-2">
-            Join TradiPlay
-          </h1>
-          <p className="text-[var(--text-secondary)] text-base md:text-lg">
-            Create your account to access all traditional games
-          </p>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Create Account</h1>
+          <p className="text-[var(--text-secondary)]">Join TradiPlay to track your progress</p>
         </div>
 
-        <form onSubmit={handleSignup} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
-            name="username"
             type="text"
-            placeholder="Username"
-            icon="person"
-            variant="auth"
+            name="username"
+            placeholder="Username (optional)"
             value={formData.username}
-            onChange={handleInputChange}
-            required
+            onChange={handleChange}
           />
-
+          
           <Input
-            name="email"
             type="email"
-            placeholder="Email Address"
-            icon="email"
-            variant="auth"
+            name="email"
+            placeholder="Email"
             value={formData.email}
-            onChange={handleInputChange}
+            onChange={handleChange}
             required
           />
-
+          
           <Input
+            type="password"
             name="password"
-            type="password"
             placeholder="Password"
-            icon="lock"
-            variant="auth"
             value={formData.password}
-            onChange={handleInputChange}
+            onChange={handleChange}
             required
           />
-
+          
           <Input
-            name="confirmPassword"
             type="password"
+            name="confirmPassword"
             placeholder="Confirm Password"
-            icon="lock"
-            variant="auth"
             value={formData.confirmPassword}
-            onChange={handleInputChange}
+            onChange={handleChange}
             required
           />
 
-          <div className="py-4 text-center">
-            <p className="text-[var(--text-secondary)] text-sm">
-              Already have an account?{' '}
-              <Link 
-                href="/auth/login" 
-                className="text-[var(--primary-color)] hover:underline font-medium"
-              >
-                Login here
-              </Link>
-            </p>
-          </div>
+          {error && (
+            <div className="text-red-500 text-sm text-center">{error}</div>
+          )}
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-5 bg-[var(--primary-color)] text-[var(--background-color)] text-lg font-bold leading-normal tracking-[0.015em] hover:bg-[var(--accent-color)] transition-colors duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="truncate">
-              {isLoading ? 'Creating Account...' : 'Sign Up'}
-            </span>
-          </button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Creating Account...' : 'Sign Up'}
+          </Button>
         </form>
-      </main>
 
-      {/* Footer with Background Pattern */}
-      <footer className="relative w-full">
-        <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-[var(--background-color)] to-transparent z-10"></div>
-        <img 
-          alt="Malay traditional pattern" 
-          className="w-full h-auto object-cover opacity-10" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIkMMPmrxoTeCV46OtRicjB3RTsKvwtaM6346GTQ9F6-adD9tOVEfSDf_jiZF-EflNzne6yO3o63CbBGVN5aOjSd1lthy9ZqPOe-9x9Q60iG0VHwA6uZID4CXiOY_c--fhsol_18Ttw2XM_omwolNPnAWGk9I5mh8XgaR-2ahTjXdeNKshrOWAwB8d56v99KYF9hEWymZLRrKEXEnUUDK7tRBTda2nSs7bIwgXcTWrxHb9BQdmLBWUE8hYukSvmVT7tlrqSDoTjGaS" 
-          style={{ aspectRatio: '390 / 320', objectPosition: 'center bottom' }}
-        />
-      </footer>
+        <div className="text-center mt-6">
+          <p className="text-[var(--text-secondary)]">
+            Already have an account?{' '}
+            <Link href="/auth/login" className="text-[var(--primary-color)] hover:underline">
+              Login
+            </Link>
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

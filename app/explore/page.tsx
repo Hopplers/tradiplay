@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../../contexts/AuthContext'
 import Button from '../../components/ui/Button'
 import GameCard from '../../components/ui/GameCard'
 import SearchBar from '../../components/ui/SearchBar'
@@ -15,9 +16,11 @@ const categories = [
 
 export default function ExplorePage() {
   const router = useRouter()
+  const { user, signOut } = useAuth()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [games, setGames] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
     async function fetchGames() {
@@ -33,6 +36,14 @@ export default function ExplorePage() {
     fetchGames()
   }, [])
 
+  useEffect(() => {
+    const handleClickOutside = () => setShowDropdown(false)
+    if (showDropdown) {
+      document.addEventListener('click', handleClickOutside)
+    }
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showDropdown])
+
   const handleGameClick = (gameId: number) => {
     router.push(`/games/${gameId}`)
   }
@@ -43,6 +54,16 @@ export default function ExplorePage() {
 
   const handleLearnMore = () => {
     console.log('Learn more clicked')
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      setShowDropdown(false)
+      router.push('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
   }
 
   const featuredGames = games.slice(0, 3)
@@ -63,10 +84,36 @@ export default function ExplorePage() {
         <h1 className="text-[var(--text-primary)] text-xl md:text-2xl font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12">
           TradiPlay
         </h1>
-        <div className="flex w-12 items-center justify-end">
-          <button className="p-2 rounded-full hover:bg-gray-700 text-[var(--text-primary)] transition-colors duration-200 ease-in-out">
+        <div className="flex w-12 items-center justify-end relative">
+          <button 
+            className="p-2 rounded-full hover:bg-gray-700 text-[var(--text-primary)] transition-colors duration-200 ease-in-out"
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowDropdown(!showDropdown)
+            }}
+          >
             <span className="material-symbols-outlined">settings</span>
           </button>
+          
+          {showDropdown && (
+            <div className="absolute top-12 right-0 bg-[var(--surface-color)] border border-gray-600 rounded-lg shadow-lg py-2 min-w-32 z-50">
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left text-[var(--text-primary)] hover:bg-gray-700 transition-colors"
+                >
+                  Logout
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push('/auth/login')}
+                  className="w-full px-4 py-2 text-left text-[var(--text-primary)] hover:bg-gray-700 transition-colors"
+                >
+                  Login
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </header>
 

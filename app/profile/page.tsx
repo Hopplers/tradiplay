@@ -1,7 +1,80 @@
 'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '../../contexts/AuthContext'
 import BackButton from '../../components/ui/BackButton'
+import Input from '../../components/ui/Input'
+import Button from '../../components/ui/Button'
+import { supabase } from '../../lib/supabase'
 
 export default function ProfilePage() {
+  const { user, userProfile, refreshUser, signOut } = useAuth()
+  const router = useRouter()
+  const [editing, setEditing] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    username: '',
+    email: ''
+  })
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth/login')
+      return
+    }
+    
+    if (userProfile) {
+      setFormData({
+        username: userProfile.username || '',
+        email: userProfile.email || user.email || ''
+      })
+    }
+  }, [user, userProfile, router])
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
+  const handleSave = async () => {
+    if (!user) return
+    
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          username: formData.username,
+          email: formData.email
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+      
+      await refreshUser()
+      setEditing(false)
+    } catch (error) {
+      console.error('Error updating profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/')
+  }
+
+  if (!user || !userProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-[var(--text-primary)]">Loading profile...</div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-grow">
       <header className="sticky top-0 z-10 bg-[var(--background-color)] bg-opacity-80 backdrop-blur-sm">
@@ -11,46 +84,95 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <main className="p-6">
-        <div className="flex flex-col items-center space-y-6">
+      <main className="p-6 pb-24">
+        <div className="flex flex-col items-center space-y-6 max-w-md mx-auto">
           {/* Avatar Section */}
           <div className="relative">
-            <img 
-              alt="User Avatar" 
-              className="w-32 h-32 rounded-full border-4 border-[var(--primary-color)]" 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbAgyTbqHTU_9axH4Sz0yrlrbBAD_fdIWEQwmONmNSKRIfjlU5rWRXUO9sl1pJUFhXEFTYuLyz4_-2BsGx62sqEVGCHG6RAUv9o5rWEJgA7keoz5pgrDIL_3r-VejeSaERJ3CYpRKlOxKdXReNjGiXDPRlxAs66ANuG-9MQZhussVt_Fr85o05wRqugHa3hj4bL7kHra9b9RhwBsu1TpBKc1XlvgY3fU4bXoaLbIVl84MuPKjsHWsVjG8JfDmafBKWeQVDTnWNWgg-"
-            />
-            <button className="absolute bottom-0 right-0 bg-[var(--primary-color)] text-black p-2 rounded-full hover:bg-[var(--accent-color)] transition-colors">
-              <svg className="feather feather-edit-2" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-              </svg>
-            </button>
+            <div className="w-32 h-32 rounded-full border-4 border-[var(--primary-color)] bg-[var(--surface-color)] flex items-center justify-center">
+              <span className="text-4xl font-bold text-[var(--text-primary)]">
+                {(userProfile.username || userProfile.email || 'U').charAt(0).toUpperCase()}
+              </span>
+            </div>
           </div>
 
           {/* Name */}
-          <h2 className="text-3xl font-bold text-white">Ahmad Zulkifli</h2>
+          <h2 className="text-3xl font-bold text-[var(--text-primary)]">
+            {userProfile.username || 'User'}
+          </h2>
+          <p className="text-[var(--text-secondary)] capitalize">{userProfile.role}</p>
 
-          {/* Profile Settings */}
+          {/* Profile Form */}
           <div className="w-full space-y-4 pt-8">
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex justify-between items-center">
-              <div>
-                <p className="text-sm text-[var(--text-secondary)]">Email Address</p>
-                <p className="text-lg font-medium text-white">ahmad.z@email.com</p>
-              </div>
-              <button className="text-[var(--primary-color)] hover:text-[var(--accent-color)] font-semibold transition-colors">
-                Change
-              </button>
-            </div>
+            {editing ? (
+              <>
+                <div>
+                  <label className="block text-sm text-[var(--text-secondary)] mb-2">Username</label>
+                  <Input
+                    type="text"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    placeholder="Enter username"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-[var(--text-secondary)] mb-2">Email</label>
+                  <Input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="Enter email"
+                  />
+                </div>
 
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4 flex justify-between items-center">
-              <div>
-                <p className="text-sm text-[var(--text-secondary)]">Password</p>
-                <p className="text-lg font-medium text-white">••••••••••••</p>
-              </div>
-              <button className="text-[var(--primary-color)] hover:text-[var(--accent-color)] font-semibold transition-colors">
-                Change
-              </button>
-            </div>
+                <div className="flex gap-3 pt-4">
+                  <Button onClick={handleSave} disabled={loading}>
+                    {loading ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setEditing(false)}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="bg-[var(--surface-color)] border border-gray-700 rounded-lg p-4 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-[var(--text-secondary)]">Username</p>
+                    <p className="text-lg font-medium text-[var(--text-primary)]">
+                      {userProfile.username || 'Not set'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--surface-color)] border border-gray-700 rounded-lg p-4 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-[var(--text-secondary)]">Email Address</p>
+                    <p className="text-lg font-medium text-[var(--text-primary)]">
+                      {userProfile.email}
+                    </p>
+                  </div>
+                </div>
+
+                <Button onClick={() => setEditing(true)} className="w-full">
+                  Edit Profile
+                </Button>
+
+                <Button 
+                  variant="secondary" 
+                  onClick={handleLogout}
+                  className="w-full"
+                >
+                  Logout
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </main>

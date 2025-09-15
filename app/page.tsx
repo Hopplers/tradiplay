@@ -1,5 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import Button from '../components/ui/Button'
 
 export default function WelcomePage() {
@@ -49,6 +50,11 @@ export default function WelcomePage() {
           <Button variant="secondary" onClick={handleSignUp}>
             Sign Up
           </Button>
+          <div className="text-center mt-4">
+            <Link href="/auth/login" className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-sm">
+              Already have an account? Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>

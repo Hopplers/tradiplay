@@ -1,60 +1,49 @@
 'use client'
-import { useState } from 'react'
-
-const games = ['Congkak', 'Gasing', 'Wau']
-
-const leaderboardData = [
-  {
-    rank: 1,
-    name: 'Raja Piatu',
-    wins: 125,
-    badge: 'Top 1%',
-    avatar: 'https://lh3.googleusercontent.com/a-/ALV-UjXqW3Fq-2g_HODT_oOFAF1J1z02f8u57a5t_T2h1c8d_w=s96-c',
-    borderColor: 'border-yellow-400',
-    textColor: 'text-yellow-400'
-  },
-  {
-    rank: 2,
-    name: 'Siti Payung',
-    wins: 118,
-    badge: 'Top 5%',
-    avatar: 'https://lh3.googleusercontent.com/a/ACg8ocKw_kYcW3XyKz0j-J3oF1w9_e5w_fF-G5qW-f_N6L-p=s96-c',
-    borderColor: 'border-gray-500',
-    textColor: 'text-gray-400'
-  },
-  {
-    rank: 3,
-    name: 'Awang Kenit',
-    wins: 112,
-    badge: 'Top 10%',
-    avatar: 'https://lh3.googleusercontent.com/a/ACg8ocJk_J-1c-f-5t-h-G-w_K3J_y1w-oO9f-5c-G-a-k-w=s96-c',
-    borderColor: 'border-orange-400',
-    textColor: 'text-orange-400'
-  },
-  {
-    rank: 4,
-    name: 'Dayang Senandung',
-    wins: 105,
-    avatar: 'https://lh3.googleusercontent.com/a-/ALV-UjVp-e3j_y-J-5Fz-j-5F-e-w_e-5t-j-oO-q-K-f-h-b=s96-c'
-  },
-  {
-    rank: 5,
-    name: 'Puteri Gunung Ledang',
-    wins: 98,
-    avatar: 'https://lh3.googleusercontent.com/a/ACg8ocL8j-o-f-J-k-w_z-K-z-f-w_z-j-o-f-w_K-f-w=s96-c'
-  }
-]
-
-const currentUser = {
-  rank: 42,
-  name: 'You',
-  wins: 52,
-  badge: 'Top 45%',
-  avatar: 'https://lh3.googleusercontent.com/a/ACg8ocJ-k-j-o-f-w_z-K-f-w_z-j-o-f-w_K-f-w_z-j=s96-c'
-}
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
+import { getLeaderboard, getGames } from '../../lib/database'
 
 export default function LeaderboardPage() {
-  const [selectedGame, setSelectedGame] = useState('Congkak')
+  const { user } = useAuth()
+  const [selectedGameId, setSelectedGameId] = useState<number | null>(null)
+  const [games, setGames] = useState<any[]>([])
+  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const gamesData = await getGames()
+        setGames(gamesData || [])
+        if (gamesData && gamesData.length > 0) {
+          setSelectedGameId(gamesData[0].id)
+        }
+      } catch (error) {
+        console.error('Error fetching games:', error)
+      }
+    }
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      if (!selectedGameId) return
+      
+      setLoading(true)
+      try {
+        const leaderboardData = await getLeaderboard(selectedGameId)
+        setLeaderboard(leaderboardData || [])
+      } catch (error) {
+        console.error('Error fetching leaderboard:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchLeaderboard()
+  }, [selectedGameId])
+
+  const currentUserEntry = leaderboard.find(entry => entry.user_id === user?.id)
+  const topEntries = leaderboard.slice(0, 10)
 
   return (
     <div className="flex-grow">
@@ -64,17 +53,17 @@ export default function LeaderboardPage() {
         </div>
       </header>
 
-      <main className="p-4">
+      <main className="p-4 pb-24">
         {/* Game Selector */}
         <div className="mb-4">
           <div className="relative">
             <select 
-              value={selectedGame}
-              onChange={(e) => setSelectedGame(e.target.value)}
-              className="w-full appearance-none bg-gray-800 border border-gray-700 text-white py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-gray-700 focus:border-gray-500"
+              value={selectedGameId || ''}
+              onChange={(e) => setSelectedGameId(Number(e.target.value))}
+              className="w-full appearance-none bg-[var(--surface-color)] border border-gray-700 text-[var(--text-primary)] py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-gray-700 focus:border-gray-500"
             >
               {games.map(game => (
-                <option key={game} value={game}>{game}</option>
+                <option key={game.id} value={game.id}>{game.name}</option>
               ))}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
@@ -85,58 +74,77 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* Leaderboard */}
-        <div className="space-y-4">
-          {leaderboardData.map((player) => (
-            <div key={player.rank} className={`flex items-center bg-gray-800/50 ${player.borderColor ? `border-2 ${player.borderColor}` : ''} rounded-xl p-3 shadow-lg`}>
-              <div className={`w-10 text-center text-xl font-bold ${player.textColor || 'text-[var(--text-secondary)]'}`}>
-                {player.rank}
-              </div>
-              <img 
-                alt={`User ${player.rank}`} 
-                className={`w-12 h-12 rounded-full mx-4 ${player.borderColor ? `border-2 ${player.borderColor}` : ''}`} 
-                src={player.avatar}
-              />
-              <div className="flex-grow">
-                <div className="font-bold text-white">{player.name}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-bold text-lg text-white">{player.wins} Wins</div>
-                {player.badge && (
-                  <div className={`flex items-center justify-end text-sm ${player.rank === 1 ? 'text-yellow-400' : 'text-gray-400'}`}>
-                    {player.rank === 1 && (
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                        <path clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fillRule="evenodd"></path>
-                      </svg>
-                    )}
-                    {player.badge}
+        {loading ? (
+          <div className="text-center text-[var(--text-secondary)] py-8">
+            Loading leaderboard...
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-center text-[var(--text-secondary)] py-8">
+            No scores yet for this game. Be the first to play!
+          </div>
+        ) : (
+          <>
+            {/* Leaderboard */}
+            <div className="space-y-4">
+              {topEntries.map((entry, index) => {
+                const rank = index + 1
+                const isTop3 = rank <= 3
+                const borderColor = rank === 1 ? 'border-yellow-400' : rank === 2 ? 'border-gray-400' : rank === 3 ? 'border-orange-400' : ''
+                const textColor = rank === 1 ? 'text-yellow-400' : rank === 2 ? 'text-gray-400' : rank === 3 ? 'text-orange-400' : 'text-[var(--text-secondary)]'
+                
+                return (
+                  <div key={entry.id} className={`flex items-center bg-[var(--surface-color)] ${isTop3 ? `border-2 ${borderColor}` : 'border border-gray-700'} rounded-xl p-3 shadow-lg`}>
+                    <div className={`w-10 text-center text-xl font-bold ${textColor}`}>
+                      {rank}
+                    </div>
+                    <div className={`w-12 h-12 rounded-full mx-4 bg-[var(--primary-color)] flex items-center justify-center text-black font-bold ${isTop3 ? `border-2 ${borderColor}` : ''}`}>
+                      {(entry.users?.username || entry.users?.email || 'U').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="font-bold text-[var(--text-primary)]">
+                        {entry.users?.username || entry.users?.email?.split('@')[0] || 'Anonymous'}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-lg text-[var(--text-primary)]">{entry.wins} Wins</div>
+                      {isTop3 && (
+                        <div className={`flex items-center justify-end text-sm ${textColor}`}>
+                          {rank === 1 && (
+                            <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                              <path clipRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" fillRule="evenodd"></path>
+                            </svg>
+                          )}
+                          Top {rank === 1 ? '1%' : rank === 2 ? '5%' : '10%'}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+                )
+              })}
             </div>
-          ))}
-        </div>
 
-        {/* Current User */}
-        <div className="mt-8 bg-gray-800/70 border border-gray-700 rounded-xl p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-10 text-center text-lg font-medium text-[var(--text-primary)]">
-              {currentUser.rank}
-            </div>
-            <img 
-              alt="Current User" 
-              className="w-12 h-12 rounded-full mx-4" 
-              src={currentUser.avatar}
-            />
-            <div className="flex-grow">
-              <div className="font-bold text-[var(--primary-color)]">{currentUser.name}</div>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="font-bold text-lg text-white">{currentUser.wins} Wins</div>
-            <div className="text-sm text-[var(--text-secondary)]">{currentUser.badge}</div>
-          </div>
-        </div>
+            {/* Current User */}
+            {user && currentUserEntry && (
+              <div className="mt-8 bg-[var(--surface-color)] border-2 border-[var(--primary-color)] rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-10 text-center text-lg font-medium text-[var(--text-primary)]">
+                    {leaderboard.findIndex(entry => entry.user_id === user.id) + 1}
+                  </div>
+                  <div className="w-12 h-12 rounded-full mx-4 bg-[var(--primary-color)] flex items-center justify-center text-black font-bold">
+                    {(currentUserEntry.users?.username || currentUserEntry.users?.email || 'U').charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-grow">
+                    <div className="font-bold text-[var(--primary-color)]">You</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg text-[var(--text-primary)]">{currentUserEntry.wins} Wins</div>
+                  <div className="text-sm text-[var(--text-secondary)]">Your Score</div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </main>
     </div>
   )
