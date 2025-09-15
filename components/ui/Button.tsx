@@ -3,13 +3,17 @@ interface ButtonProps {
     variant?: 'primary' | 'secondary'
     onClick?: () => void
     className?: string
+    type?: 'button' | 'submit' | 'reset'
+    disabled?: boolean
   }
   
   export default function Button({ 
     children, 
     variant = 'primary', 
     onClick,
-    className = '' 
+    className = '',
+    type = 'button',
+    disabled = false
   }: ButtonProps) {
     const baseStyles = "py-3 px-6 rounded-full font-bold focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] focus:ring-opacity-50 transition-colors duration-200 ease-in-out"
     
@@ -20,8 +24,10 @@ interface ButtonProps {
   
     return (
       <button 
-        className={`${baseStyles} ${variants[variant]} ${className}`}
+        className={`${baseStyles} ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         onClick={onClick}
+        type={type}
+        disabled={disabled}
       >
         {children}
       </button>
