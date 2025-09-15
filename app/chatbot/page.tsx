@@ -1,93 +1,206 @@
 'use client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import BackButton from '../../components/ui/BackButton'
+
+interface Message {
+  id: string
+  text: string
+  isUser: boolean
+  timestamp: Date
+}
 
 export default function ChatbotPage() {
-  const router = useRouter()
-  const [message, setMessage] = useState('')
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Hello! I\'m TradiBot. Ask me anything about Malay traditional games!',
+      isUser: false,
+      timestamp: new Date()
+    }
+  ])
+  const [inputText, setInputText] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const questionPool = [
+    "Tell me about Congkak",
+    "How do you play Gasing?",
+    "What is Wau kite flying?",
+    "Explain Batu Seremban rules",
+    "How is Sepak Takraw played?",
+    "What is Dam Haji?",
+    "Tell me about Kabbadi",
+    "What are the origins of Congkak?",
+    "How do you make a traditional Gasing?",
+    "What materials are used for Wau kites?",
+    "How many players can play Batu Seremban?",
+    "What skills does Sepak Takraw develop?",
+    "Is Dam Haji similar to checkers?",
+    "What are the rules of Kabbadi?",
+    "Which games are played indoors?",
+    "Which games require physical fitness?",
+    "What games can children play?",
+    "How do these games preserve culture?",
+    "Which game is easiest to learn?",
+    "What equipment do I need for each game?"
+  ]
+
+  const [suggestions, setSuggestions] = useState(() => {
+    const shuffled = [...questionPool].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 2)
+  })
+
+  const getNewSuggestions = () => {
+    const shuffled = [...questionPool].sort(() => 0.5 - Math.random())
+    setSuggestions(shuffled.slice(0, 2))
+  }
+
+  const handleSuggestion = (suggestion: string) => {
+    setInputText(suggestion)
+  }
+
+  const sendMessage = async () => {
+    if (!inputText.trim() || isLoading) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText,
+      isUser: true,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setInputText('')
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: inputText,
+          context: 'You are a helpful assistant for TradiPlay, an app about Malay traditional games. Help users learn about games like Congkak, Gasing, Wau, Batu Seremban, Sepak Takraw, Dam Haji, and Kabbadi.'
+        }),
+      })
+
+      const data = await response.json()
+      
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: data.response || 'Sorry, I couldn\'t process your request.',
+        isUser: false,
+        timestamp: new Date()
+      }
+
+      setMessages(prev => [...prev, botMessage])
+      getNewSuggestions()
+    } catch (error) {
+      console.error('Error:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I\'m having trouble connecting. Please try again.',
+        isUser: false,
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, errorMessage])
+      getNewSuggestions()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
 
   return (
-    <div className="relative flex size-full min-h-screen flex-col group/design-root overflow-x-hidden">
-      <div className="flex-grow flex flex-col">
-        <header className="flex items-center bg-[var(--background-color)] p-4 pb-2 justify-between sticky top-0 z-10 border-b border-gray-800">
-          <div className="flex w-12">
-            <button 
-              onClick={() => router.back()}
-              className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 text-[var(--text-primary)] gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-2 hover:bg-gray-800"
+    <div className="flex flex-col h-screen">
+      <header className="sticky top-0 z-10 bg-[var(--background-color)] bg-opacity-80 backdrop-blur-sm">
+        <div className="flex items-center p-4">
+          <BackButton />
+          <h1 className="text-xl font-bold text-center flex-1 pr-10">TradiBot</h1>
+        </div>
+      </header>
+
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
-              <svg className="text-[var(--text-primary)]" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 18l-6-6 6-6"></path>
-              </svg>
-            </button>
-          </div>
-          <div className="flex flex-col items-center">
-            <h1 className="text-[var(--text-primary)] text-lg font-bold leading-tight tracking-[-0.015em]">TradiBot</h1>
-            <p className="text-xs text-[var(--text-secondary)]">Online</p>
-          </div>
-          <div className="flex w-12 items-center justify-end">
-            <button 
-              onClick={() => router.push('/explore')}
-              className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 w-10 text-[var(--text-primary)] gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-2 hover:bg-gray-800"
-            >
-              <svg className="text-[var(--text-primary)]" fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-grow p-4 overflow-y-auto space-y-6">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center">
-              <svg className="text-[var(--primary-color)]" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8V4H8"></path><rect height="8" rx="2" width="8" x="4" y="12"></rect><path d="M20 12v4h-4"></path><path d="m18.5 6.5-5 5"></path>
-              </svg>
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.isUser
+                    ? 'bg-[var(--primary-color)] text-black'
+                    : 'bg-[var(--surface-color)] text-[var(--text-primary)]'
+                }`}
+              >
+                <p className="whitespace-pre-wrap">{message.text}</p>
+                <p className={`text-xs mt-1 ${
+                  message.isUser ? 'text-black/70' : 'text-[var(--text-secondary)]'
+                }`}>
+                  {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                </p>
+              </div>
             </div>
-            <div className="bg-gray-800 p-3 rounded-lg rounded-tl-none max-w-xs">
-              <p className="text-sm">Hello! I'm TradiBot. I can help you learn about traditional Malay games. What would you like to know?</p>
+          ))}
+          
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-[var(--surface-color)] text-[var(--text-primary)] p-3 rounded-lg">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-[var(--text-secondary)] rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-[var(--text-secondary)] rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-[var(--text-secondary)] rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-start gap-3 justify-end">
-            <div className="bg-[var(--primary-color)] text-black p-3 rounded-lg rounded-br-none max-w-xs">
-              <p className="text-sm">Tell me about Congkak.</p>
+        {/* Input */}
+        <div className="p-4 bg-[var(--background-color)] border-t border-gray-700">
+          {/* Suggestion Buttons */}
+          {!isLoading && (
+            <div className="flex gap-2 mb-3">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestion(suggestion)}
+                  className="px-3 py-2 bg-[var(--surface-color)] text-[var(--text-primary)] rounded-lg text-sm hover:bg-gray-600 transition-colors border border-gray-600"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 flex items-center justify-center">
-              <svg className="text-[var(--primary-color)]" fill="none" height="20" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 8V4H8"></path><rect height="8" rx="2" width="8" x="4" y="12"></rect><path d="M20 12v4h-4"></path><path d="m18.5 6.5-5 5"></path>
-              </svg>
-            </div>
-            <div className="bg-gray-800 p-3 rounded-lg rounded-tl-none max-w-xs">
-              <p className="text-sm">Congkak is a mancala game played in Malaysia, Singapore, and Brunei. It involves two players moving seeds or marbles around a wooden board with several holes. The goal is to collect more seeds than your opponent. Would you like to know the rules?</p>
-            </div>
-          </div>
-
-          <div className="flex gap-2 justify-start ml-11">
-            <button className="bg-gray-700 text-white py-2 px-4 rounded-full text-sm hover:bg-gray-600">Yes, please</button>
-            <button className="bg-gray-700 text-white py-2 px-4 rounded-full text-sm hover:bg-gray-600">No, thanks</button>
-            <button className="bg-gray-700 text-white py-2 px-4 rounded-full text-sm hover:bg-gray-600">Another game</button>
-          </div>
-        </main>
-
-        <footer className="sticky bottom-0 bg-gray-900 p-4">
-          <div className="flex items-center gap-2">
-            <input 
-              className="form-input flex-grow min-w-0 resize-none overflow-hidden rounded-full text-[var(--text-primary)] focus:outline-0 focus:ring-2 focus:ring-[var(--primary-color)] border-none bg-gray-800 h-12 placeholder:text-gray-400 px-4 text-sm font-normal leading-normal" 
-              placeholder="Type your message..." 
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+          )}
+          
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask about traditional games..."
+              className="flex-1 p-3 bg-[var(--surface-color)] border border-gray-600 rounded-lg text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--primary-color)]"
+              disabled={isLoading}
             />
-            <button className="flex items-center justify-center h-12 w-12 rounded-full bg-[var(--primary-color)] text-black hover:bg-[var(--secondary-color)] transition-colors">
-              <svg fill="none" height="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13L2 9L22 2zM13 22L9 13"></path>
-              </svg>
+            <button
+              onClick={sendMessage}
+              disabled={!inputText.trim() || isLoading}
+              className="px-6 py-3 bg-[var(--primary-color)] text-black rounded-lg font-medium hover:bg-[var(--accent-color)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Send
             </button>
           </div>
-        </footer>
-      </div>
+        </div>
+      </main>
     </div>
   )
 }
