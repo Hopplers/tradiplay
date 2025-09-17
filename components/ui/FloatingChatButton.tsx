@@ -5,7 +5,7 @@ export default function FloatingChatButton() {
   const router = useRouter()
   const pathname = usePathname()
 
-  if (pathname === '/chatbot' || pathname === '/admin' || pathname === '/superadmin') return null
+  if (pathname === '/chatbot' || pathname === '/admin' || pathname === '/superadmin'|| pathname === '/') return null
 
   return (
     <button
