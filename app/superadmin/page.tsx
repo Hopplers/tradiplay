@@ -5,7 +5,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { getAllUsers, updateUserRole } from '../../lib/database'
 
 export default function SuperAdminPanel() {
-  const { user, userProfile } = useAuth()
+  const { user, userProfile, signOut } = useAuth()
   const router = useRouter()
   const [users, setUsers] = useState<any[]>([])
   const [allUsers, setAllUsers] = useState<any[]>([])
@@ -76,7 +76,8 @@ export default function SuperAdminPanel() {
 
   const regularUsers = allUsers.filter(u => u.role === 'user')
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     router.push('/auth/login')
   }
 

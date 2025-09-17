@@ -1,9 +1,11 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '../../contexts/AuthContext'
 import { getAllGames, updateGame, getAllUsers, createGame } from '../../lib/database'
 
 export default function AdminPanel() {
+  const { signOut } = useAuth()
   const router = useRouter()
   const [games, setGames] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
@@ -125,8 +127,9 @@ export default function AdminPanel() {
     }
   }
 
-  const handleLogout = () => {
-    router.push('/auth/signup')
+  const handleLogout = async () => {
+    await signOut()
+    router.push('/auth/login')
   }
 
   if (loading) {
