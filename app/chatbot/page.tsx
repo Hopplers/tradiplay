@@ -27,15 +27,11 @@ export default function ChatbotPage() {
     "What is Wau kite flying?",
     "Explain Batu Seremban rules",
     "How is Sepak Takraw played?",
-    "What is Dam Haji?",
-    "Tell me about Kabbadi",
     "What are the origins of Congkak?",
     "How do you make a traditional Gasing?",
     "What materials are used for Wau kites?",
     "How many players can play Batu Seremban?",
     "What skills does Sepak Takraw develop?",
-    "Is Dam Haji similar to checkers?",
-    "What are the rules of Kabbadi?",
     "Which games are played indoors?",
     "Which games require physical fitness?",
     "What games can children play?",
@@ -80,7 +76,7 @@ export default function ChatbotPage() {
         },
         body: JSON.stringify({
           message: inputText,
-          context: 'You are a helpful assistant for TradiPlay, an app about Malay traditional games. Help users learn about games like Congkak, Gasing, Wau, Batu Seremban, Sepak Takraw, Dam Haji, and Kabbadi.'
+          context: 'You are a helpful assistant for TradiPlay, an app about Malay traditional games. Help users learn about games like Congkak, Gasing, Wau, Batu Seremban and Sepak Takraw'
         }),
       })
 
